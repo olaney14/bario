@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SDL3-CS" Version="3.4.18" />
+    <PackageReference Include="SDL3-CS.Windows" Version="3.4.18" />
+    <PackageReference Include="SDL3-CS.Windows.Image" Version="3.4.6.12" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <None Include="res\**\*.*">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+  </ItemGroup>
+
+</Project>
