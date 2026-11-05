@@ -23,12 +23,9 @@ namespace bario {
 
 			TileMap = new();
 
-			TileLayer layer = new("Level", 16, 16, 0);
 			for (int x = 0; x < 16; x++) {
-				layer.TrySetTile(x, 2, "smile");
+				TileMap.Foreground.SetTile(x, 2, "smile");
 			}
-
-			TileMap.AddLayer(layer);
 		}
 
 		public void Update() {
@@ -48,7 +45,7 @@ namespace bario {
 			//}
 
 			// Do sweep
-			(Vec2 offset, Vec2 newVelocity) = TileMap.MoveAndSlide(playerCollider, player.Velocity, player.z, out List<Collision.SweepResult> collisions);
+			(Vec2 offset, Vec2 newVelocity) = TileMap.MoveAndSlide(playerCollider, player.Velocity, out List<Collision.SweepResult> collisions);
 
 			player.Pos += offset;
 			player.Velocity = newVelocity;
@@ -63,20 +60,19 @@ namespace bario {
 		public void Render(RenderContext ctx) {
 			Backdrop.Render(ctx, this);
 
-			int minX = (int)MathF.Floor(ctx.Camera.Left / 16) * 16;
-			int minY = (int)MathF.Floor(ctx.Camera.Top / 16) * 16;
-			int maxX = (int)MathF.Ceiling(ctx.Camera.Right / 16) * 16;
-			int maxY = (int)MathF.Ceiling(ctx.Camera.Bottom / 16) * 16;
+			int minX = (int)MathF.Floor(ctx.Camera.Left / 16);
+			int minY = (int)MathF.Floor(ctx.Camera.Top / 16);
+			int maxX = (int)MathF.Ceiling(ctx.Camera.Right / 16);
+			int maxY = (int)MathF.Ceiling(ctx.Camera.Bottom / 16);
 
-			for (int z = TileMap.LayerMin; z <= TileMap.LayerMax; z++) {
-				for (int y = minY; y <= maxY; y += 16) {
-					for (int x = minX; x <= maxX; x += 16) {
-						foreach (Tile tile in TileMap.GetTilesByLayer(x / 16, y / 16, z)) {
-							Texture texture = TextureRegistry.GetTexture(tile.texture);
-							ctx.DrawTexture(texture, new(x, y));
-						}
-					}
-				}
+			foreach (var (x, y, tile) in TileMap.Background.GetTilesInRange(minX, minY, maxX, maxY)) {
+				Texture texture = TextureRegistry.GetTexture(tile.texture);
+				ctx.DrawTexture(texture, new(x * 16f, y * 16f));
+			}
+
+			foreach (var (x, y, tile) in TileMap.Foreground.GetTilesInRange(minX, minY, maxX, maxY)) {
+				Texture texture = TextureRegistry.GetTexture(tile.texture);
+				ctx.DrawTexture(texture, new(x * 16f, y * 16f));
 			}
 		}
 

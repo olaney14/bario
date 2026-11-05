@@ -8,7 +8,6 @@ namespace bario {
 		public bool active = false;
 		public string selectedTile = "glass";
 		private readonly Level level;
-		public int selectedLayer = 0;
 
 		public Editor(RenderContext ctx, Level level) {
 			Texture placement = Texture.LoadFromFile("res/textures/placement.png", ctx.Renderer);
@@ -23,33 +22,32 @@ namespace bario {
 
 			if (!active) return;
 
-			Vec2 pos = input.GetMousePosition() / 4f;
-			int tileX = (int)((pos.x + ctx.Camera.Left) / 16f);
-			int tileY = (int)((pos.y + ctx.Camera.Top) / 16f);
+			Vec2 worldPos = (input.GetMousePosition() / 4f) + new Vec2(ctx.Camera.Left, ctx.Camera.Top);
+			(int tileX, int tileY) = WorldToTile(worldPos);
 
-			if (tileX >= 0 && tileY >= 0 && tileX < level.TileMap.Width && tileY < level.TileMap.Height) {
-				if (input.GetMouseButtonPressed(MouseButton.Left)) {
-					if (TileRegistry.GetTile(selectedTile) is Tile tile) {
-						level.TileMap.Layers[selectedLayer].TrySetTile(tileX, tileY, tile.RegistryID);
-					}
-				} else if (input.GetMouseButtonPressed(MouseButton.Right)) {
-					level.TileMap.Layers[selectedLayer].TrySetTile(tileX, tileY, -1);
+			if (input.GetMouseButtonPressed(MouseButton.Left)) {
+				if (TileRegistry.GetTile(selectedTile) is Tile tile) {
+					level.TileMap.Foreground.SetTile(tileX, tileY, tile.RegistryID);
 				}
+			} else if (input.GetMouseButtonPressed(MouseButton.Right)) {
+				level.TileMap.Foreground.ClearTile(tileX, tileY);
 			}
 		}
 
 		public void Render(Input input, RenderContext ctx) {
 			if (!active) return;
 
-			Vec2 pos = input.GetMousePosition() / 4f;
-			int tileX = (int)((pos.x + ctx.Camera.Left) / 16f);
-			int tileY = (int)((pos.y + ctx.Camera.Top) / 16f);
+			Vec2 worldPos = (input.GetMousePosition() / 4f) + new Vec2(ctx.Camera.Left, ctx.Camera.Top);
+			(int tileX, int tileY) = WorldToTile(worldPos);
 
-			//Console.WriteLine($"{tileX}, {tileY}");
+			ctx.DrawTexture(TextureRegistry.GetTexture("placement"), new(tileX * 16f, tileY * 16f));
+		}
 
-			if (tileX >= 0 && tileY >= 0 && tileX < level.TileMap.Width && tileY < level.TileMap.Height) {
-				ctx.DrawTexture(TextureRegistry.GetTexture("placement"), new(tileX * 16f, tileY * 16f));
-			}
+		public static (int x, int y) WorldToTile(Vec2 worldPos) {
+			return (
+				(int)MathF.Floor(worldPos.x / 16f),
+				(int)MathF.Floor(worldPos.y / 16f)
+			);
 		}
 	}
 }

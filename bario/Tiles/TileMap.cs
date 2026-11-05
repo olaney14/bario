@@ -3,85 +3,44 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario.Tiles {
-	public class TileMap {
-		public List<TileLayer> Layers { get; private set; }
-		public int Width { get; private set; }
-		public int Height { get; private set; }
+	public enum TileMapLayer {
+		Background,
+		Foreground
+	}
 
-		public int LayerMin { get; private set; } = 0;
-		public int LayerMax { get; private set; } = 0;
-		private Dictionary<int, int> layerBeginIndices = [];
+	public class TileMap {
+		public TileLayer Background { get; private set; }
+		public TileLayer Foreground { get; private set; }
 
 		public TileMap() {
-			Layers = [];
+			Background = new TileLayer();
+			Foreground = new TileLayer();
 		}
 
-		// Insert a layer in sorted Z order
-		public void AddLayer(TileLayer layer) {
-			Width = Math.Max(Width, layer.Width);
-			Height = Math.Max(Height, layer.Height);
-			LayerMax = Math.Max(LayerMax, layer.Z);
-			LayerMin = Math.Min(LayerMin, layer.Z);
+		public TileLayer GetLayer(TileMapLayer layer) => layer switch {
+			TileMapLayer.Foreground => Foreground,
+			TileMapLayer.Background => Background,
+			_ => throw new ArgumentOutOfRangeException(nameof(layer))
+		};
 
-			int insertAt = Layers.Count;
-
-			for (int i = 0; i < Layers.Count; i++) {
-				if (layer.Z < Layers[i].Z) {
-					insertAt = i; 
-					break;
-				}
-			}
-
-			Layers.Insert(insertAt, layer);
-
-			for (int i = 0; i < Layers.Count; i++) {
-				if (!layerBeginIndices.ContainsKey(Layers[i].Z)) {
-					layerBeginIndices[Layers[i].Z] = i;
-				}
-			}
+		public bool TryGetTile(int x, int y, out Tile? tile) {
+			return Foreground.TryGetTile(x, y, out tile);
 		}
 
-		public IEnumerable<Tile> GetTiles(int x, int y) {
-			foreach (TileLayer layer in Layers) {
-				if (layer.TryGetTile(x, y, out Tile? tile) && tile != null) {
-					yield return tile;
-				}
-			}
+		public bool TryGetBackgroundTile(int x, int y, out Tile? tile) {
+			return Background.TryGetTile(x, y, out tile);
 		}
 
-		public IEnumerable<Tile> GetTilesByLayer(int x, int y, int z) {
-			if (!layerBeginIndices.ContainsKey(z)) yield break;
-			
-			for (int i = layerBeginIndices[z]; i < Layers.Count; i++) {
-				if (Layers[i].Z != z) yield break;
-
-				if (Layers[i].TryGetTile(x, y, out Tile? tile) && tile != null) {
-					yield return tile;
-				}
-			}
+		public bool TryGetInstanceData(int x, int y, out TileInstanceData? data) {
+			return Foreground.TryGetInstanceData(x, y, out data);
 		}
 
-		public IEnumerable<TileInstanceData> GetTileInstanceData(int x, int y) {
-			foreach (TileLayer layer in Layers) {
-				if (layer.TryGetInstanceData(x, y, out TileInstanceData? tile) && tile != null) {
-					yield return tile;
-				}
-			}
+		public bool GetTileSolid(int x, int y) {
+			return Foreground.TryGetTile(x, y, out Tile? tile)
+				&& tile != null && tile.solid;
 		}
 
-		public IEnumerable<TileInstanceData> GetTileInstanceDataByLayer(int x, int y, int z) {
-			if (!layerBeginIndices.ContainsKey(z)) yield break;
-
-			for (int i = layerBeginIndices[z]; i < Layers.Count; i++) {
-				if (Layers[i].Z != z) yield break;
-
-				if (Layers[i].TryGetInstanceData(x, y, out TileInstanceData? tile) && tile != null) {
-					yield return tile;
-				}
-			}
-		}
-
-		public Collision.CollisionResult? Collide(Collision.AABB collider, int z) {
+		public Collision.CollisionResult? Collide(Collision.AABB collider) {
 			int tileMinX = (int)MathF.Floor(collider.min.x / 16);
 			int tileMinY = (int)MathF.Floor(collider.min.y / 16);
 			int tileMaxX = (int)MathF.Ceiling(collider.max.x / 16);
@@ -91,14 +50,13 @@ namespace bario.Tiles {
 
 			for (int y = tileMinY; y <= tileMaxY; y++) {
 				for (int x = tileMinX; x <= tileMaxX; x++) {
-					if (!GetTileSolid(x, y, z)) continue;
+					if (!GetTileSolid(x, y)) continue;
 
 					Collision.AABB tile = new() {
 						min = new(x * 16f, y * 16f),
 						max = new((x + 1) * 16f, (y + 1) * 16f)
 					};
 
-					// Return minimum collision
 					if (collider.Collide(tile) is Collision.CollisionResult hit) {
 						if (best == null || hit.resolution.Magnitude() < best.Value.resolution.Magnitude()) {
 							best = hit;
@@ -110,14 +68,7 @@ namespace bario.Tiles {
 			return best;
 		}
 
-		// TODO: Cache this
-		public bool GetTileSolid(int x, int y, int z) {
-			return GetTilesByLayer(x, y, z).Any(t => {
-				return t.solid;
-			});
-		}
-
-		public Collision.SweepResult? Sweep(Collision.AABB collider, Vec2 velocity, int z) {
+		public Collision.SweepResult? Sweep(Collision.AABB collider, Vec2 velocity) {
 			Vec2 endMin = collider.min + velocity;
 			Vec2 endMax = collider.max + velocity;
 
@@ -130,7 +81,7 @@ namespace bario.Tiles {
 
 			for (int y = tileMinY; y <= tileMaxY; y++) {
 				for (int x = tileMinX; x <= tileMaxX; x++) {
-					if (!GetTileSolid(x, y, z)) continue;
+					if (!GetTileSolid(x, y)) continue;
 
 					Collision.AABB tile = new() {
 						min = new(x * 16f, y * 16f),
@@ -144,8 +95,7 @@ namespace bario.Tiles {
 					int nx = (int)hit.normal.x;
 					int ny = (int)hit.normal.y;
 
-					// Check for internal edges
-					if (GetTileSolid(x + nx, y + ny, z)) continue;
+					if (GetTileSolid(x + nx, y + ny)) continue;
 
 					if (best == null || hit.timeOfImpact < best.Value.timeOfImpact) {
 						best = hit;
@@ -162,12 +112,10 @@ namespace bario.Tiles {
 		public (Vec2 offset, Vec2 velocity) MoveAndSlide(
 			Collision.AABB collider,
 			Vec2 velocity,
-			int z,
 			out List<Collision.SweepResult> collisions
 		) {
 			Vec2 offset = new(0f, 0f);
 			Vec2 remaining = velocity;
-
 			Vec2 finalVelocity = velocity;
 
 			collisions = [];
@@ -176,8 +124,7 @@ namespace bario.Tiles {
 				if (remaining.MagnitudeSquared() < EPSILON * EPSILON) break;
 
 				Collision.AABB current = collider.Offset(offset).Expand(-Collision.SKIN_WIDTH);
-
-				Collision.SweepResult? result = Sweep(current, remaining, z);
+				Collision.SweepResult? result = Sweep(current, remaining);
 
 				if (result is not Collision.SweepResult hit) {
 					offset += remaining;
