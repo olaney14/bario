@@ -19,13 +19,32 @@ namespace bario {
 			DrawPropsInRange(ctx);
 		}
 
+		private float SeededRandom(int seed) {
+			uint x = (uint)seed;
+
+			unchecked {
+				x ^= x >> 16;
+				x *= 0x85ebca6bu;
+				x ^= x >> 13;
+				x *= 0xc2b2ae35u;
+				x ^= x >> 16;
+			}
+
+			return (float)(x / 4294967296.0);
+		}
+
+		private float SeededRandom(int seed, float min, float max) {
+			float rand = SeededRandom(seed);
+			return rand * (max - min) + min;
+		}
+
 		private void DrawPropsInRange(RenderContext ctx) {
 			foreach (BackgroundProp prop in props) {
 				float start = MathF.Floor(ctx.Camera.Left / prop.frequency) * prop.frequency;
 				float end = MathF.Ceiling(ctx.Camera.Right / prop.frequency) * prop.frequency;
 
 				for (float x = start; x <= end; x += prop.frequency) {
-					float y = MathF.Round((float)random.NextDouble() * (prop.yMax - prop.yMin) + prop.yMin);
+					float y = MathF.Round(SeededRandom((int)x * 11, prop.yMin, prop.yMax));
 					ctx.DrawTexture(prop.texture, new(x, y));
 				}
 			}

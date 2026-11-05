@@ -111,6 +111,34 @@ namespace bario {
 			SDL.RenderTexture(Renderer, texture.Handle, src, dest);
 		}
 
+		public void DrawTextureFlipped(Texture texture, Vec2 texPos, Vec2 texSize, Vec2 pos, bool flipH, bool flipV) {
+			if (!CheckStateValid()) { return; }
+
+			SDL.FRect src = CreateFRect(texPos.x, texPos.y, texSize.x, texSize.y);
+			Vec2 screen = WorldToScreen(pos);
+			SDL.FRect dest = CreateFRect(screen.x, screen.y, texSize.x, texSize.y);
+
+			SDL.FlipMode flipMode = SDL.FlipMode.None;
+
+			if (flipH && flipV) {
+				flipMode = SDL.FlipMode.HorizontalAndVertical;
+			} else if (flipH) {
+				flipMode = SDL.FlipMode.Horizontal;
+			} else if (flipV) {
+				flipMode = SDL.FlipMode.Vertical;
+			}
+
+			SDL.RenderTextureRotated(
+				Renderer,
+				texture.Handle,
+				src,
+				dest,
+				0.0,
+				IntPtr.Zero,
+				flipMode
+			);
+		}
+
 		public void ClearColor(SDL.Color color) {
 			SDL.SetRenderDrawColor(Renderer, color.R, color.G, color.B, color.A);
 			SDL.RenderClear(Renderer);

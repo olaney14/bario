@@ -33,12 +33,12 @@ namespace bario {
 			SDL.SetTextureScaleMode(renderTexture, SDL.ScaleMode.PixelArt);
 			SDL.GetTextureSize(renderTexture, out float w, out float h);
 
-			Player = new Player();
-			Level = new Level(16);
+			Level = new Level();
+			Player = new Player(Level);
 		}
 
-		public void Update(double dt) {
-			Player.Update(dt);
+		public void Update(double dt, Input input) {
+			Player.Update(input);
 			ctx.Camera.Update(Player, Level, dt);
 		}
 

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace bario {
+namespace bario.Tiles {
 	internal static class TileRegistry {
 		private static readonly List<Tile?> tiles = [];
 		private static readonly Dictionary<string, int> registryIDs = [];
@@ -51,12 +51,13 @@ namespace bario {
 			return 0;
 		}
 
-		private static Tile ErrorTile() {
+		public static Tile ErrorTile() {
+#if DEBUG
 			if (tiles[0] is null || tiles[0].RegistryName != "error") {
 				throw new InvalidOperationException("Error tile was not present");
 			}
-
-			return tiles[0];
+#endif
+			return tiles[0]!;
 		}
 
 		public static Tile GetTileByID(int id) { 

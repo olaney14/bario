@@ -14,7 +14,7 @@ namespace bario {
 
 		public void Update(Player player, Level level, double dt) {
 			Vec2 goalPlayerScreen = size / 2;
-			origin = player.Pos - goalPlayerScreen + player.Size / 2;
+			origin = player.Pos.Round() - goalPlayerScreen + player.Size / 2;
 		}
 
 		public float Top { get { return origin.y; } }

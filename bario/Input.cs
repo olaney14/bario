@@ -67,5 +67,18 @@ namespace bario {
 		public bool GetKeyJustReleased(SDL.Keycode key) {
 			return GetKeyState(key) == KeyState.JustReleased;
 		}
+
+		public Vec2 GetMovementVector() {
+			float x = 0f;
+			float y = 0f;
+
+			// TODO: Movement keys interface
+			if (GetKeyPressed(SDL.Keycode.Left)) x -= 1f;
+			if (GetKeyPressed(SDL.Keycode.Right)) x += 1f;
+			if (GetKeyPressed(SDL.Keycode.Up)) y -= 1f;
+			if (GetKeyPressed(SDL.Keycode.Down)) y += 1f;
+
+			return new(x, y);
+		}
 	}
 }

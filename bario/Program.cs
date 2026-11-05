@@ -20,6 +20,7 @@ namespace bario {
 				.CreateLogger();
 
 			RenderContext? ctx = null;
+			Input input = new();
 			
 			try {
 				ctx = RenderContext.Create(
@@ -40,6 +41,14 @@ namespace bario {
 						if (sdlEvent.Type == (uint)SDL.EventType.Quit) {
 							return 0;
 						}
+
+						if (sdlEvent.Type == (uint)SDL.EventType.KeyDown && !sdlEvent.Key.Repeat) {
+							input.KeyPressed(sdlEvent.Key.Key);
+						}
+
+						if (sdlEvent.Type == (uint)SDL.EventType.KeyUp) {
+							input.KeyReleased(sdlEvent.Key.Key);
+						}
 					}
 
 					// Separate update and render step
@@ -51,8 +60,12 @@ namespace bario {
 
 					// Events
 					while (accumulator >= PHYSICS_STEP) {
-						game.Update(PHYSICS_STEP);
+						game.Update(PHYSICS_STEP, input);
 						accumulator -= PHYSICS_STEP;
+
+						// on 144hz, render is called more often than update so "just-presses" are ignored sometimes
+						// on < 60hz, the same problem exists if render acesses update so be careful
+						input.Update();
 					}
 
 					game.Render();

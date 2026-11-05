@@ -1,6 +1,7 @@
 ﻿using SDL3;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace bario {
@@ -42,6 +43,17 @@ namespace bario {
 
 		public static SDL.Color CreateColor(byte r, byte g, byte b) {
 			return CreateColor(r, g, b, 255);
+		}
+
+		public static void FillMatrix<T>(ref T[,] matrix, T value) {
+			Span<T> flatSpan = MemoryMarshal.CreateSpan(ref matrix[0, 0], matrix.Length);
+			flatSpan.Fill(value);
+		}
+
+		public static float MoveToward(float current, float target, float maxDelta) {
+			float diff = target - current;
+			if (MathF.Abs(diff) <= maxDelta) return target;
+			return current + MathF.Sign(diff) * maxDelta;
 		}
 	}
 }

@@ -1,18 +1,19 @@
-﻿using System;
+﻿using bario.Tiles;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace bario {
 	internal class Level {
-		private List<int> tiles = [];
-		public int Width { get; private set; }
-		public int Height { get; private set; }
+		public float gravity = 1f;
+
+		//private List<int> tiles = [];
+		public TileMap TileMap { get; private set; }
 		public LevelBackdrop Backdrop { get; private set; }
 
-		public Level(int height) {
-			Width = 0;
-			Height = height;
-
+		public Level() {
 			// test
 			Backdrop = new LevelBackdrop.BackdropBuilder()
 				.WithBackgroundFill(Common.RGB(0, 127, 127))
@@ -20,51 +21,40 @@ namespace bario {
 				.WithProp(new LevelBackdrop.BackgroundProp("cloud", -32, 103).WithRandomYOffset(16))
 				.Build();
 
-			SetTile(0, 2, "smile");
-			SetTile(1, 2, "smile");
-			SetTile(2, 2, "smile");
-		}
+			TileMap = new();
 
-		private int TileIx(int x, int y) {
-			return x * Height + y;
-		}
-
-		public void SetTile(int x, int y, string tile) {
-			if (x >= Width) {
-				for (int i = Width; i <= x; i++) {
-					for (int j = 0; j < Height; j++) {
-						tiles.Add(-1);
-					}
-				}
-
-				Width = x + 1;
+			TileLayer layer = new("Level", 16, 16, 0);
+			for (int x = 0; x < 16; x++) {
+				layer.TrySetTile(x, 2, "smile");
 			}
 
-			if (x < 0 || y < 0 || y >= Height) {
-				throw new ArgumentOutOfRangeException($"Cannot set tile: ({x}, {y}) out of bounds {Width}x{Height}.");
-			}
-
-			int id = TileRegistry.GetID(tile);
-			tiles[TileIx(x, y)] = id;
-		}
-
-		public Tile? GetTile(int x, int y) {
-			if (x < 0 || y < 0 || x >= Width || y >= Height) {
-				return null;
-				//throw new ArgumentOutOfRangeException($"Error getting tile: ({x}, {y}) out of bounds {Width}x{Height}.");
-			}
-
-			int id = tiles[TileIx(x, y)];
-
-			if (id >= 0) {
-				return TileRegistry.GetTileByID(id);
-			}
-
-			return null;
+			TileMap.AddLayer(layer);
 		}
 
 		public void Update() {
 
+		}
+
+		public void MoveAndSlide(Player player) {
+			Collision.AABB playerCollider = player.Collider;
+
+			//// Resolve if already colliding
+			//Collision.CollisionResult? result = TileMap.Collide(playerCollider, player.z);
+
+			//if (result is Collision.CollisionResult alreadyColliding) {
+			//	Console.WriteLine("Colliding: Resolve");
+			//	player.Pos += alreadyColliding.resolution;
+			//	playerCollider = player.Collider;
+			//}
+
+			// Do sweep
+			(Vec2 offset, Vec2 newVelocity) = TileMap.MoveAndSlide(playerCollider, player.Velocity, player.z, out Collision.SweepResult? collision);
+
+			player.Pos += offset;
+			player.Velocity = newVelocity;
+
+			Vec2 gravityVec = new(0f, gravity);
+			player.grounded = collision is Collision.SweepResult hit && hit.normal.Dot(gravityVec) < 0f;
 		}
 
 		public void Render(RenderContext ctx) {
@@ -76,12 +66,13 @@ namespace bario {
 			int maxX = (int)MathF.Ceiling(ctx.Camera.Right / 16) * 16;
 			int maxY = (int)MathF.Ceiling(ctx.Camera.Bottom / 16) * 16;
 
-			for (int y = minY; y <= maxY; y += 16) {
-				for (int x = minX; x <= maxX; x += 16) {
-					Tile? tile = GetTile(x / 16, y / 16);
-					if (tile is not null) {
-						Texture texture = TextureRegistry.GetTexture(tile.texture);
-						ctx.DrawTexture(texture, new(x, y));
+			for (int z = TileMap.LayerMin; z <= TileMap.LayerMax; z++) {
+				for (int y = minY; y <= maxY; y += 16) {
+					for (int x = minX; x <= maxX; x += 16) {
+						foreach (Tile tile in TileMap.GetTilesByLayer(x / 16, y / 16, z)) {
+							Texture texture = TextureRegistry.GetTexture(tile.texture);
+							ctx.DrawTexture(texture, new(x, y));
+						}
 					}
 				}
 			}
