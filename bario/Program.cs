@@ -44,10 +44,18 @@ namespace bario {
 
 						if (sdlEvent.Type == (uint)SDL.EventType.KeyDown && !sdlEvent.Key.Repeat) {
 							input.KeyPressed(sdlEvent.Key.Key);
-						}
-
-						if (sdlEvent.Type == (uint)SDL.EventType.KeyUp) {
+						} else if (sdlEvent.Type == (uint)SDL.EventType.KeyUp) {
 							input.KeyReleased(sdlEvent.Key.Key);
+						} else if (sdlEvent.Type == (uint)SDL.EventType.MouseButtonDown) {
+							if (Input.FromSDLButtonIndex(sdlEvent.Button.Button) is MouseButton button) {
+								input.MouseButtonPressed(button);
+							}
+						} else if (sdlEvent.Type == (uint)SDL.EventType.MouseButtonUp) {
+							if (Input.FromSDLButtonIndex(sdlEvent.Button.Button) is MouseButton button) {
+								input.MouseButtonReleased(button);
+							}
+						} else if (sdlEvent.Type == (uint)SDL.EventType.MouseMotion) {
+							input.MouseMoved(new(sdlEvent.Motion.X, sdlEvent.Motion.Y), new(sdlEvent.Motion.XRel, sdlEvent.Motion.YRel));
 						}
 					}
 
@@ -60,7 +68,7 @@ namespace bario {
 
 					// Events
 					while (accumulator >= PHYSICS_STEP) {
-						game.Update(PHYSICS_STEP, input);
+						game.Update(PHYSICS_STEP, input, ctx);
 						accumulator -= PHYSICS_STEP;
 
 						// on 144hz, render is called more often than update so "just-presses" are ignored sometimes
@@ -68,7 +76,7 @@ namespace bario {
 						input.Update();
 					}
 
-					game.Render();
+					game.Render(input);
 				}
 			
 				return 0;

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario {
-	internal class RenderContext {
+	public class RenderContext {
 		private bool _disposed;
 
 		public IntPtr Window { get; }

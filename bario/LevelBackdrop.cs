@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario {
-	internal class LevelBackdrop {
+	public class LevelBackdrop {
 		private SDL.Color backgroundFill;
 		private string? backgroundTileTexture = null;
 		private List<BackgroundProp> props = [];

@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario {
-	internal class Player(Level level) {
-		public const float GRAVITY_UP = 0.045f;
-		public const float GRAVITY_DOWN = 0.085f;
-		public const float MAX_FALL = 0.8f;
+	public class Player(Level level) {
+		public const float GRAVITY_UP = 0.08f;
+		public const float GRAVITY_DOWN = 0.14f;
+		public const float MAX_FALL = 1.4f;
 		public const float LOW_JUMP_EXTRA = 1.5f;
 		public const float GROUND_ACCEL = 0.2f;
 		public const float GROUND_FRICTION = 0.25f;
@@ -27,8 +27,6 @@ namespace bario {
 		public static readonly float JUMP_CUT_VELOCITY = JumpVelocityForHeight(JUMP_HEIGHT_MIN, GRAVITY_UP);
 		public const int JUMP_BUFFER_FRAMES = 8;
 
-
-
 		public string TextureSheet { get; private set; } = "bario";
 
 		public Vec2 Pos { get; set; } = new(0, 0);
@@ -40,7 +38,8 @@ namespace bario {
 		private int coyoteTimer = 0;
 		private int jumpBuffer = 0;
 
-		public Vec2 Size { get; private set; } = new(16, 18);
+		public Vec2 Size { get; private set; } = new(12, 14);
+		public Vec2 TextureOffset { get; set; } = new(-2f, -4f);
 		public Vec2 Center { get { return Pos + Size / 2f; } }
 		public Collision.AABB Collider {
 			get {
@@ -59,7 +58,7 @@ namespace bario {
 
 		public void Render(RenderContext ctx) {
 			Texture texture = TextureRegistry.GetTexture(TextureSheet);
-			ctx.DrawTextureFlipped(texture, new(16 * frame, 0), new(16, 18), Pos.Round(), !facing, false);
+			ctx.DrawTextureFlipped(texture, new(16 * frame, 0), new(16, 18), Pos.Round() + TextureOffset, !facing, false);
 		}
 
 		const float EPSILON = 0.001f;
@@ -97,6 +96,14 @@ namespace bario {
 			Velocity = new Vec2(Common.MoveToward(Velocity.x, targetX, accel), Velocity.y);
 		}
 
+		private bool TriggeredJump(Input input) {
+			return input.GetKeyJustPressed(SDL3.SDL.Keycode.C) || input.GetKeyJustPressed(SDL3.SDL.Keycode.Up);
+		}
+
+		private bool ReleasedJump(Input input) {
+			return input.GetKeyJustReleased(SDL3.SDL.Keycode.C) || input.GetKeyJustReleased(SDL3.SDL.Keycode.Up);
+		}
+
 		private void CheckJump(Input input) {
 			if (grounded) {
 				coyoteTimer = COYOTE_FRAMES;
@@ -104,7 +111,7 @@ namespace bario {
 				coyoteTimer--;
 			}
 
-			if (input.GetKeyJustPressed(SDL3.SDL.Keycode.C)) {
+			if (TriggeredJump(input)) {
 				jumpBuffer = JUMP_BUFFER_FRAMES;
 			} else if (jumpBuffer > 0) {
 				jumpBuffer--;
@@ -117,7 +124,7 @@ namespace bario {
 				coyoteTimer = 0;
 			}
 
-			if (input.GetKeyJustReleased(SDL3.SDL.Keycode.C) && Velocity.y < -JUMP_CUT_VELOCITY) {
+			if (ReleasedJump(input) && Velocity.y < -JUMP_CUT_VELOCITY) {
 				Velocity = new Vec2(Velocity.x, -JUMP_CUT_VELOCITY);
 			}
 		}

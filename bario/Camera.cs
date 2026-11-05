@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario {
-	internal class Camera {
+	public class Camera {
 		public Vec2 origin;
 		public Vec2 size;
 

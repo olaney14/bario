@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario {
-	internal class Collision {
+	public class Collision {
 		public const float SKIN_WIDTH = 0f;
 
 		public struct AABB {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario.Tiles {
-	internal class TileMap {
+	public class TileMap {
 		public List<TileLayer> Layers { get; private set; }
 		public int Width { get; private set; }
 		public int Height { get; private set; }
@@ -163,14 +163,14 @@ namespace bario.Tiles {
 			Collision.AABB collider,
 			Vec2 velocity,
 			int z,
-			out Collision.SweepResult? collision
+			out List<Collision.SweepResult> collisions
 		) {
 			Vec2 offset = new(0f, 0f);
 			Vec2 remaining = velocity;
 
 			Vec2 finalVelocity = velocity;
 
-			collision = null;
+			collisions = [];
 
 			for (int i = 0; i < MAX_SLIDE_COLLISIONS; i++) {
 				if (remaining.MagnitudeSquared() < EPSILON * EPSILON) break;
@@ -194,8 +194,7 @@ namespace bario.Tiles {
 				float normalDisplacement = remaining.Dot(hit.normal);
 				if (normalDisplacement < 0f) remaining -= hit.normal * normalDisplacement;
 
-				// assign if null
-				collision ??= hit;
+				collisions.Add(hit);
 			}
 
 			return (offset, finalVelocity);

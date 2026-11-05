@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace bario.Tiles {
-	internal class Tile {
+	public class Tile {
 		public string texture = "error";
 		public string RegistryName { get; private set; }
 		public int RegistryID { get; private set; }
@@ -27,6 +27,16 @@ namespace bario.Tiles {
 		public void SetRegistryValues(string name, int id) {
 			RegistryName = name;
 			RegistryID = id;
+		}
+
+		public Tile WithFriction(float friction) {
+			this.friction = friction;
+			return this;
+		}
+
+		public Tile WithSolid(bool solid) {
+			this.solid = solid;
+			return this;
 		}
 	}
 }

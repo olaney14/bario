@@ -9,6 +9,7 @@ namespace bario {
 
 		public static void Init(IntPtr renderer) {
 			Register(Texture.CreateDefaultTexture(16, 16, renderer), "error");
+			Tiles.Tiles.RegisterTileTextures(renderer);
 		}
 
 		public static void Register(Texture texture, string name) {

@@ -5,7 +5,7 @@ using System.Text;
 using static System.Net.WebRequestMethods;
 
 namespace bario.Tiles {
-	internal class TileLayer {
+	public class TileLayer {
 		public string Name { get; set; }
 		// public int[,] Tiles { get; private set; }
 		private int[,] tiles;

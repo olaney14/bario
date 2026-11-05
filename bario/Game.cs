@@ -16,6 +16,7 @@ namespace bario {
 		public bool shouldExit = false;
 
 		private IntPtr renderTexture;
+		public Editor editor;
 
 		public Game(RenderContext ctx) {
 			this.ctx = ctx;
@@ -35,14 +36,16 @@ namespace bario {
 
 			Level = new Level();
 			Player = new Player(Level);
+			editor = new Editor(ctx, Level);
 		}
 
-		public void Update(double dt, Input input) {
+		public void Update(double dt, Input input, RenderContext ctx) {
 			Player.Update(input);
 			ctx.Camera.Update(Player, Level, dt);
+			editor.Update(input, ctx);
 		}
 
-		public void Render() {
+		public void Render(Input input) {
 			// Render to lower-res texture
 			SDL.SetRenderTarget(ctx.Renderer, renderTexture);
 
@@ -51,6 +54,8 @@ namespace bario {
 
 			Level.Render(ctx);
 			Player.Render(ctx);
+
+			editor.Render(input, ctx);
 
 			// Render scaled texture to window
 			SDL.SetRenderTarget(ctx.Renderer, IntPtr.Zero);

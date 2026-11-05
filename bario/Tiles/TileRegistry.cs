@@ -13,7 +13,7 @@ namespace bario.Tiles {
 			Register(tile, "error");
 		}
 
-		public static void Register(Tile tile, string name) {
+		public static Tile Register(Tile tile, string name) {
 			bool placed = false;
 			
 			for (int i = 0; i < tiles.Count; i++) {
@@ -31,6 +31,7 @@ namespace bario.Tiles {
 			}
 
 			tile.SetRegistryValues(name, registryIDs[name]);
+			return tile;
 		}
 
 		public static Tile? GetTile(string name) { 
