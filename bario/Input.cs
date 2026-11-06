@@ -22,6 +22,7 @@ namespace bario {
 		private readonly Dictionary<MouseButton, KeyState> buttons = [];
 		private Vec2 mousePos = new(0f, 0f);
 		private Vec2 delta = new(0f, 0f);
+		private Vec2 scrollDelta = new(0f, 0f);
 
 		public void KeyPressed(SDL.Keycode key) {
 			KeyState state = GetKeyState(key);
@@ -153,6 +154,14 @@ namespace bario {
 		public void MouseMoved(Vec2 newPosition, Vec2 delta) {
 			mousePos = newPosition;
 			this.delta = delta;
+		}
+
+		public float GetScroll() {
+			return scrollDelta.y;
+		}
+
+		public void Scrolled(Vec2 scrollDelta) {
+			this.scrollDelta = scrollDelta;
 		}
 	}
 }

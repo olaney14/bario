@@ -56,6 +56,8 @@ namespace bario {
 							}
 						} else if (sdlEvent.Type == (uint)SDL.EventType.MouseMotion) {
 							input.MouseMoved(new(sdlEvent.Motion.X, sdlEvent.Motion.Y), new(sdlEvent.Motion.XRel, sdlEvent.Motion.YRel));
+						} else if (sdlEvent.Type == (uint)SDL.EventType.MouseWheel) {
+							input.Scrolled(new (sdlEvent.Wheel.X, sdlEvent.Wheel.Y));
 						}
 					}
 
