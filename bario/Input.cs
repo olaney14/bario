@@ -139,10 +139,10 @@ namespace bario {
 			float y = 0f;
 
 			// TODO: Movement keys interface
-			if (GetKeyPressed(SDL.Keycode.Left)) x -= 1f;
-			if (GetKeyPressed(SDL.Keycode.Right)) x += 1f;
-			if (GetKeyPressed(SDL.Keycode.Up)) y -= 1f;
-			if (GetKeyPressed(SDL.Keycode.Down)) y += 1f;
+			if (GetKeyPressed(SDL.Keycode.Left) || GetKeyPressed(SDL.Keycode.A)) x -= 1f;
+			if (GetKeyPressed(SDL.Keycode.Right) || GetKeyPressed(SDL.Keycode.D)) x += 1f;
+			if (GetKeyPressed(SDL.Keycode.Up) || GetKeyPressed(SDL.Keycode.W)) y -= 1f;
+			if (GetKeyPressed(SDL.Keycode.Down) || GetKeyPressed(SDL.Keycode.S)) y += 1f;
 
 			return new(x, y);
 		}

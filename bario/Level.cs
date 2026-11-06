@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-using static System.Net.WebRequestMethods;
 
 namespace bario {
 	public class Level {

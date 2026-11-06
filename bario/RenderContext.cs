@@ -111,6 +111,11 @@ namespace bario {
 			SDL.RenderTexture(Renderer, texture.Handle, src, dest);
 		}
 
+		public void DrawTextureScreenSpace(Texture texture, Vec2 pos, Vec2 size) {
+			SDL.FRect dest = CreateFRect(pos.x, pos.y, size.x, size.y);
+			SDL.RenderTexture(Renderer, texture.Handle, IntPtr.Zero, dest);
+		}
+
 		public void DrawTextureFlipped(Texture texture, Vec2 texPos, Vec2 texSize, Vec2 pos, bool flipH, bool flipV) {
 			if (!CheckStateValid()) { return; }
 
@@ -165,6 +170,22 @@ namespace bario {
 				W = w,
 				H = h
 			};
+		}
+
+		public void FillRect(float x, float y, float width, float height, byte r, byte g, byte b, byte a) {
+			SDL.SetRenderDrawColor(Renderer, r, g, b, 255);
+
+			SDL.FRect rect = CreateFRect(x, y, width, height);
+			
+			SDL.RenderFillRect(Renderer, rect);
+		}
+
+		public void StrokeRect(float x, float y, float width, float height, byte r, byte g, byte b, byte a) {
+			SDL.SetRenderDrawColor(Renderer, r, g, b, 255);
+
+			SDL.FRect rect = CreateFRect(x, y, width, height);
+
+			SDL.RenderRect(Renderer, rect);
 		}
 	}
 }

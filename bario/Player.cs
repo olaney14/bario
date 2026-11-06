@@ -13,7 +13,7 @@ namespace bario {
 		public const float GROUND_ACCEL = 0.2f;
 		public const float GROUND_FRICTION = 0.25f;
 		public const float AIR_FRICTION = 0.01f;
-		public const float AIR_ACCEL = 0.08f;
+		public const float AIR_ACCEL = 0.12f;
 		public const float MAX_RUN_SPEED = 1.6f;
 		public const int COYOTE_FRAMES = 6;
 
@@ -50,6 +50,7 @@ namespace bario {
 		public bool grounded = false;
 		public int z = 0;
 		public bool facing = true; // True : Left, False : Right
+		public bool editorControls = false;
 
 		public static void RegisterTextures(RenderContext ctx) {
 			Texture bario = Texture.LoadFromFile("res/textures/bario.png", ctx.Renderer);
@@ -64,6 +65,11 @@ namespace bario {
 		const float EPSILON = 0.001f;
 
 		public void Update(Input input) {
+			if (editorControls) {
+				EditorControls(input);
+				return;
+			}
+			
 			CheckJump(input);
 			CheckWalk(input);
 
@@ -74,6 +80,11 @@ namespace bario {
 			Level.MoveAndSlide(this);
 
 			Animate();
+		}
+
+		private void EditorControls(Input input) {
+			Vec2 move = input.GetMovementVector();
+			Pos += move;
 		}
 
 		private void CheckWalk(Input input) {
@@ -97,11 +108,11 @@ namespace bario {
 		}
 
 		private bool TriggeredJump(Input input) {
-			return input.GetKeyJustPressed(SDL3.SDL.Keycode.C) || input.GetKeyJustPressed(SDL3.SDL.Keycode.Up);
+			return input.GetKeyJustPressed(SDL3.SDL.Keycode.C) || input.GetKeyJustPressed(SDL3.SDL.Keycode.Up) || input.GetKeyJustPressed(SDL3.SDL.Keycode.Space);
 		}
 
 		private bool ReleasedJump(Input input) {
-			return input.GetKeyJustReleased(SDL3.SDL.Keycode.C) || input.GetKeyJustReleased(SDL3.SDL.Keycode.Up);
+			return input.GetKeyJustReleased(SDL3.SDL.Keycode.C) || input.GetKeyJustReleased(SDL3.SDL.Keycode.Up) || input.GetKeyJustReleased(SDL3.SDL.Keycode.Space);
 		}
 
 		private void CheckJump(Input input) {

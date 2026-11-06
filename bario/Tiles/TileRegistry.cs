@@ -54,7 +54,7 @@ namespace bario.Tiles {
 
 		public static Tile ErrorTile() {
 #if DEBUG
-			if (tiles[0] is null || tiles[0].RegistryName != "error") {
+			if (tiles[0] is null || tiles[0]!.RegistryName != "error") {
 				throw new InvalidOperationException("Error tile was not present");
 			}
 #endif
@@ -72,7 +72,15 @@ namespace bario.Tiles {
 				Log.Warning("No tile found for id {A}", id);
 			}
 
-			return tile;
+			return tile!;
+		}
+
+		public static IEnumerable<Tile> GetAllTiles() {
+			for (int i = 0; i < tiles.Count; i++) {
+				if (tiles[i] != null) {
+					yield return tiles[i]!;
+				}
+			}
 		}
 	}
 }
