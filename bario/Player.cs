@@ -17,6 +17,9 @@ namespace bario {
 		public const float MAX_RUN_SPEED = 1.6f;
 		public const int COYOTE_FRAMES = 6;
 
+		public const float LEDGE_GRAB_RANGE = 4f;
+		public static readonly float LEDGE_JUMP_VELOCITY = JumpVelocityForHeight(JUMP_HEIGHT_MAX * 0.8f, GRAVITY_UP);
+
 		private static float JumpVelocityForHeight(float height, float gravity) {
 			return MathF.Sqrt(2f * gravity * height);
 		}
@@ -37,6 +40,12 @@ namespace bario {
 		private int currentFrameTime = 0;
 		private int coyoteTimer = 0;
 		private int jumpBuffer = 0;
+
+		private bool grabbingLedge = false;
+		private int ledgeTileX = 0;
+		private int ledgeTileY = 0;
+		private float ledgeSnapX = 0f;
+		private int ledgeFaceDir = 0;
 
 		public Vec2 Size { get; private set; } = new(12, 14);
 		public Vec2 TextureOffset { get; set; } = new(-2f, -4f);
@@ -72,10 +81,13 @@ namespace bario {
 			
 			CheckJump(input);
 			CheckWalk(input);
+			CheckLedge(input);
 
 			// Gravity
-			float gravity = Velocity.y < 0f ? GRAVITY_UP : GRAVITY_DOWN;
-			Velocity += new Vec2(0f, MathF.Min(gravity, MAX_FALL));
+			if (!grabbingLedge) {
+				float gravity = Velocity.y < 0f ? GRAVITY_UP : GRAVITY_DOWN;
+				Velocity += new Vec2(0f, MathF.Min(gravity, MAX_FALL));
+			}
 
 			Level.MoveAndSlide(this);
 
@@ -140,7 +152,114 @@ namespace bario {
 			}
 		}
 
+		private bool NearLedge() {
+			if (grounded) return false;
+			if (MathF.Abs(Velocity.x) < EPSILON) return false;
+
+			int dir = Velocity.x > 0f ? 1 : -1;
+
+			float wallEdge = dir > 0 ? Collider.max.x : Collider.min.x;
+			int wallTileX = (int)MathF.Floor((wallEdge + dir * 0.5f) / 16f);
+
+			float handY = Pos.y + Size.y * 0.5f;
+			int handTileY = (int)MathF.Floor(handY / 16f);
+			int topTileY = (int)MathF.Floor(Pos.y / 16f);
+
+			for (int tileY = handTileY; tileY >= topTileY; tileY--) {
+				bool solidHere = Level.TileMap.GetTileSolid(wallTileX, tileY);
+				bool solidAbove = Level.TileMap.GetTileSolid(wallTileX, tileY - 1);
+
+				if (!solidHere || solidAbove) continue;
+
+				float tileNearEdge = dir > 0 ? wallTileX * 16f : (wallTileX + 1) * 16f;
+
+				float dist = MathF.Abs(wallEdge - tileNearEdge);
+
+				if (dist > LEDGE_GRAB_RANGE) continue;
+
+				float tileTopY = tileY * 16f;
+				float tileCenterY = tileTopY + 8f;
+				if (handY < tileTopY || handY > tileCenterY) continue;
+
+				ledgeTileX = wallTileX;
+				ledgeTileY = tileY;
+				ledgeSnapX = tileNearEdge;
+				ledgeFaceDir = dir;
+				return true;
+			}
+
+			return false;
+		}
+
+		private void CheckLedge(Input input) {
+			if (grabbingLedge) {
+				UpdateLedgeGrab(input);
+				return;
+			}
+
+			// Corner vault
+			bool nearLedge = NearLedge();
+			if (Velocity.y < 0f && nearLedge && jumpBuffer > 0) {
+				Velocity = new Vec2(ledgeFaceDir * MAX_RUN_SPEED, -LEDGE_JUMP_VELOCITY);
+				jumpBuffer = 0;
+				coyoteTimer = 0;
+				return;
+			}
+
+			// Ledge grab
+			if (nearLedge && Velocity.y >= 0f) {
+				AttachToLedge();
+			}
+		}
+
+		private void AttachToLedge() {
+			grabbingLedge = true;
+
+			float newX = ledgeFaceDir > 0 ?
+				ledgeSnapX - Size.x :
+				ledgeSnapX;
+
+			float newY = ledgeTileY * 16f - Size.y * 0.5f;
+
+			Pos = new Vec2(newX, newY);
+			Velocity = new Vec2(0f, 0f);
+
+			coyoteTimer = 0;
+			// jumpBuffer = 0;
+		}
+
+		private void UpdateLedgeGrab(Input input) {
+			Velocity = new Vec2(0f, 0f);
+
+			Vec2 inputVec = input.GetMovementVector();
+			bool pushingAway = (ledgeFaceDir > 0 && inputVec.x < -EPSILON) ||
+							   (ledgeFaceDir < 0 && inputVec.x > EPSILON);
+
+			if (pushingAway) {
+				ReleaseLedge();
+				return;
+			}
+
+			if (jumpBuffer > 0) {
+				ReleaseLedge();
+				Velocity = new Vec2(0f, -LEDGE_JUMP_VELOCITY);
+				coyoteTimer = 0;
+				jumpBuffer = 0;
+			}
+		}
+
+		private void ReleaseLedge() {
+			grabbingLedge = false;
+			coyoteTimer = COYOTE_FRAMES;
+		}
+
 		private void Animate() {
+			if (grabbingLedge) {
+				frame = 4;
+				currentFrameTime = 0;
+				return;
+			}
+
 			if (grounded) {
 				if (MathF.Abs(Velocity.x) > 0.2f) {
 					// Higher velocity = fewer game frames per animation frame (faster cycling)
