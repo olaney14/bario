@@ -30,11 +30,13 @@ namespace bario {
 			}
 
 			if (showPickBlockScreen) {
-				UpdatePickBlockScreen(input);
+				UpdatePickBlockScreen(input, ctx);
 			}
 
-			if (!MouseCaptured(input)) {
-				Vec2 worldPos = (input.GetMousePosition() / 4f) + new Vec2(ctx.Camera.Left, ctx.Camera.Top);
+			if (!MouseCaptured(input, ctx)) {
+				// Console.WriteLine($"{ctx.PixelScale}");
+				Vec2 worldPos = ctx.MouseWorld(input);
+				//Vec2 worldPos = (input.GetMousePosition() / ctx.PixelScale) + new Vec2(ctx.Camera.Left, ctx.Camera.Top);
 				(int tileX, int tileY) = WorldToTile(worldPos);
 
 				if (input.GetMouseButtonPressed(MouseButton.Left)) {
@@ -50,7 +52,7 @@ namespace bario {
 		public void Render(Input input, RenderContext ctx) {
 			if (!active) return;
 
-			Vec2 worldPos = (input.GetMousePosition() / 4f) + new Vec2(ctx.Camera.Left, ctx.Camera.Top);
+			Vec2 worldPos = (input.GetMousePosition() / ctx.PixelScale) + new Vec2(ctx.Camera.Left, ctx.Camera.Top);
 			(int tileX, int tileY) = WorldToTile(worldPos);
 
 			ctx.DrawTexture(TextureRegistry.GetTexture("placement"), new(tileX * 16f, tileY * 16f));
@@ -84,8 +86,8 @@ namespace bario {
 		const float HOVER_SCALE = 1.25f;
 		const float SCROLL_SPEED = 8f;
 
-		private bool MouseCaptured(Input input) {
-			Vec2 mouse = input.GetMousePosition() / 4f;
+		private bool MouseCaptured(Input input, RenderContext ctx) {
+			Vec2 mouse = input.GetMousePosition() / ctx.PixelScale;
 
 			if (mouse.x >= PANEL_X && mouse.y >= PANEL_Y && mouse.x <= PANEL_X + PANEL_WIDTH && mouse.y <= PANEL_Y + PANEL_HEIGHT) {
 				return true;
@@ -103,7 +105,7 @@ namespace bario {
 			float contentHeight = tiles.Count * TILE_STEP + TILE_PADDING;
 			float maxScroll = MathF.Max(0f, contentHeight - PANEL_HEIGHT);
 
-			Vec2 mouse = input.GetMousePosition() / 4f;
+			Vec2 mouse = input.GetMousePosition() / ctx.PixelScale;
 
 			SDL3.SDL.SetRenderClipRect(ctx.Renderer, RenderContext.CreateRect(
 				(int)PANEL_X,
@@ -164,7 +166,7 @@ namespace bario {
 
 		private int hoveringTileId = -1;
 
-		private void UpdatePickBlockScreen(Input input) {
+		private void UpdatePickBlockScreen(Input input, RenderContext ctx) {
 			if (!showPickBlockScreen) return;
 
 			List<Tile> tiles = TileRegistry.GetAllTiles().ToList();
@@ -177,7 +179,7 @@ namespace bario {
 			pickBlockScrollOffset = Math.Clamp(pickBlockScrollOffset, 0f, maxScroll);
 
 			// Hit test — figure out which tile the mouse is over
-			Vec2 mouse = input.GetMousePosition() / 4f;
+			Vec2 mouse = input.GetMousePosition() / ctx.PixelScale;
 			hoveringTileId = -1;
 
 			for (int i = 0; i < tiles.Count; i++) {

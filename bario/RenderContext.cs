@@ -13,6 +13,7 @@ namespace bario {
 		public int Width { get; }
 		public int Height { get; }
 		public Camera Camera { get; }
+		public int PixelScale { get; private set; } = 1;
 
 		private RenderContext(IntPtr window, IntPtr renderer, int width, int height) {
 			Window = window;
@@ -186,6 +187,26 @@ namespace bario {
 			SDL.FRect rect = CreateFRect(x, y, width, height);
 
 			SDL.RenderRect(Renderer, rect);
+		}
+
+		public void SetPixelScale(int newScale) {
+			PixelScale = newScale;
+		}
+
+		public Vec2 WindowToGame(Vec2 windowPos) {
+			SDL.GetWindowSize(Window, out int windowW, out int windowH);
+
+			int offsetX = (windowW - Game.FRAME_WIDTH * PixelScale) / 2;
+			int offsetY = (windowH - Game.FRAME_HEIGHT * PixelScale) / 2;
+
+			return new Vec2(
+				(windowPos.x - offsetX) / PixelScale + Camera.Left,
+				(windowPos.y - offsetY) / PixelScale + Camera.Top
+			);
+		}
+
+		public Vec2 MouseWorld(Input input) {
+			return WindowToGame(input.GetMousePosition());
 		}
 	}
 }

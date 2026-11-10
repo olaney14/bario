@@ -58,10 +58,25 @@ namespace bario {
 			editor.Render(input, ctx);
 
 			// Render scaled texture to window
+			SDL.GetWindowSize(ctx.Window, out int windowWidth, out int windowHeight);
+
+			int scaleX = windowWidth / FRAME_WIDTH;
+			int scaleY = windowHeight / FRAME_HEIGHT;
+			ctx.SetPixelScale(Math.Max(1, Math.Min(scaleX, scaleY)));
+
+			int scaledWidth = FRAME_WIDTH * ctx.PixelScale;
+			int scaledHeight = FRAME_HEIGHT * ctx.PixelScale;
+			int offsetX = (windowWidth - scaledWidth) / 2;
+			int offsetY = (windowHeight - scaledHeight) / 2;
+			// Console.WriteLine($"{scaledWidth}, {scaledHeight}, {scaleX}, {scaleY}");
+
+			SDL.FRect dest = RenderContext.CreateFRect(offsetX, offsetY, scaledWidth, scaledHeight);
+
 			SDL.SetRenderTarget(ctx.Renderer, IntPtr.Zero);
 			SDL.RenderClear(ctx.Renderer);
 
-			SDL.RenderTexture(ctx.Renderer, renderTexture, IntPtr.Zero, IntPtr.Zero);
+			SDL.SetTextureScaleMode(renderTexture, SDL.ScaleMode.Nearest);
+			SDL.RenderTexture(ctx.Renderer, renderTexture, IntPtr.Zero, dest);
 
 			SDL.RenderPresent(ctx.Renderer);
 		}

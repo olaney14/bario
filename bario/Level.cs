@@ -15,7 +15,7 @@ namespace bario {
 		public Level() {
 			// test
 			Backdrop = new LevelBackdrop.BackdropBuilder()
-				.WithBackgroundFill(Common.RGB(0, 127, 127))
+				.WithBackgroundFill(Common.RGB(0, 0, 0))
 				.WithProp(new("tree", 48, 64))
 				.WithProp(new LevelBackdrop.BackgroundProp("cloud", -32, 103).WithRandomYOffset(16))
 				.Build();
